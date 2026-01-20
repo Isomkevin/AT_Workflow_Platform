@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "workflowId": "example-sms-workflow-1",
+    "version": 1,
+    "name": "Simple SMS Echo Workflow",
+    "description": "Echoes back received SMS messages",
+    "createdBy": "admin",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "environment": "dev"
+  },
+  "trigger": {
+    "id": "trigger-1",
+    "type": "SMS_RECEIVED",
+    "label": "SMS Received",
+    "config": {},
+    "position": {
+      "x": 250,
+      "y": 100
+    }
+  },
+  "nodes": [
+    {
+      "id": "trigger-1",
+      "type": "SMS_RECEIVED",
+      "label": "SMS Received",
+      "config": {},
+      "position": {
+        "x": 250,
+        "y": 100
+      }
+    },
+    {
+      "id": "node-1",
+      "type": "SEND_SMS",
+      "label": "Send SMS",
+      "config": {
+        "to": "{{msisdn}}",
+        "message": "You said: {{message}}"
+      },
+      "position": {
+        "x": 250,
+        "y": 250
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "trigger-1",
+      "target": "node-1"
+    }
+  ],
+  "settings": {
+    "maxExecutionTimeMs": 30000,
+    "enableReplay": true
+  }
+}

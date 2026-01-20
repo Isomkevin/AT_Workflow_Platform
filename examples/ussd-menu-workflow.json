@@ -1,0 +1,130 @@
+{
+  "metadata": {
+    "workflowId": "example-ussd-menu-1",
+    "version": 1,
+    "name": "USSD Menu Workflow",
+    "description": "Simple USSD menu with options",
+    "createdBy": "admin",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "environment": "dev"
+  },
+  "trigger": {
+    "id": "trigger-1",
+    "type": "USSD_SESSION_START",
+    "label": "USSD Session Start",
+    "config": {},
+    "position": {
+      "x": 250,
+      "y": 100
+    }
+  },
+  "nodes": [
+    {
+      "id": "trigger-1",
+      "type": "USSD_SESSION_START",
+      "label": "USSD Session Start",
+      "config": {},
+      "position": {
+        "x": 250,
+        "y": 100
+      }
+    },
+    {
+      "id": "node-1",
+      "type": "SEND_USSD_RESPONSE",
+      "label": "Show Menu",
+      "config": {
+        "message": "Welcome!\\n1. Check Balance\\n2. Buy Airtime\\n3. Exit",
+        "expectInput": true
+      },
+      "position": {
+        "x": 250,
+        "y": 250
+      }
+    },
+    {
+      "id": "node-2",
+      "type": "SWITCH",
+      "label": "Route by Input",
+      "config": {
+        "value": "{{input}}",
+        "cases": [
+          {
+            "value": "1",
+            "label": "Balance"
+          },
+          {
+            "value": "2",
+            "label": "Airtime"
+          },
+          {
+            "value": "3",
+            "label": "Exit"
+          }
+        ]
+      },
+      "position": {
+        "x": 250,
+        "y": 400
+      }
+    },
+    {
+      "id": "node-3",
+      "type": "SEND_USSD_RESPONSE",
+      "label": "Show Balance",
+      "config": {
+        "message": "Your balance is KES 100",
+        "expectInput": false
+      },
+      "position": {
+        "x": 100,
+        "y": 550
+      }
+    },
+    {
+      "id": "node-4",
+      "type": "SESSION_END",
+      "label": "End Session",
+      "config": {
+        "message": "Thank you!"
+      },
+      "position": {
+        "x": 250,
+        "y": 700
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "trigger-1",
+      "target": "node-1"
+    },
+    {
+      "id": "edge-2",
+      "source": "node-1",
+      "target": "node-2"
+    },
+    {
+      "id": "edge-3",
+      "source": "node-2",
+      "target": "node-3",
+      "condition": "1"
+    },
+    {
+      "id": "edge-4",
+      "source": "node-3",
+      "target": "node-4"
+    },
+    {
+      "id": "edge-5",
+      "source": "node-2",
+      "target": "node-4",
+      "condition": "3"
+    }
+  ],
+  "settings": {
+    "maxExecutionTimeMs": 60000,
+    "enableReplay": true
+  }
+}

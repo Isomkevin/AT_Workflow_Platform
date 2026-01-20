@@ -1,0 +1,93 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Africa's Talking Brand Colors */
+:root {
+  --at-primary: #126DBF;
+  --at-primary-dark: #0B3B6A;
+  --at-primary-light: #e6f2fb;
+  --at-primary-lighter: #cce5f7;
+  --at-text-primary: #1a1a1a;
+  --at-text-secondary: #666;
+  --at-border: #e5e7eb;
+  --at-bg: #ffffff;
+  --at-bg-secondary: #f9fafb;
+}
+
+/* React Flow Customization */
+.react-flow__controls {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid #e6f2fb !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+.react-flow__controls-button {
+  background: #fff !important;
+  border-bottom: 1px solid #e6f2fb !important;
+  color: #0B3B6A !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #e6f2fb !important;
+  color: #126DBF !important;
+}
+
+.react-flow__minimap {
+  background: #f9fafb !important;
+  border: 2px solid #e6f2fb !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.react-flow__background {
+  background-color: #fafbfc;
+}
+
+.react-flow__edge-path {
+  stroke: #126DBF;
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #0B3B6A;
+  stroke-width: 3;
+}
+
+.react-flow__connection-line {
+  stroke: #126DBF;
+  stroke-width: 2;
+  stroke-dasharray: 5,5;
+}
+
+.react-flow__handle {
+  background: #126DBF !important;
+  border: 2px solid #fff !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.react-flow__handle-connecting {
+  background: #0B3B6A !important;
+}
+
+.react-flow__handle-valid {
+  background: #10b981 !important;
+}
