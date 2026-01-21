@@ -1,81 +1,24 @@
 # Africa's Talking Workflow Automation Platform
 
-A world-class, production-ready workflow automation platform comparable to Zapier, n8n, and Twilio Studio — but deeply optimized for Africa's Talking (AT) and African telecom workflows.
+A production-ready workflow automation platform for Africa's Talking services. Build, deploy, and manage complex automation workflows with a visual builder and powerful execution engine.
 
-## Architecture
+## What Is This?
 
-The platform is built with clean architecture principles and strict separation of concerns:
+A workflow orchestration system specifically designed for African telecom workflows. Unlike generic automation tools, this platform provides:
 
-```
-/shared
-  /workflow-spec      # Canonical workflow specification types
-  /node-definitions   # All node type definitions (triggers, actions, logic, state)
-
-/backend
-  /compiler          # Workflow compiler (validates & transforms specs)
-  /execution-engine     # Event-driven workflow execution engine
-  /adapters/africas-talking  # AT API abstraction layer
-  /state                # Session state management (Redis)
-  /logging              # Observability & execution logging
-  /api                  # REST API server
-
-/frontend
-  /workflow-builder    # React Flow-based visual workflow builder
-```
-
-## Features
-
-### Core Capabilities
-
-- **Visual Workflow Builder**: React Flow-based canvas with drag-and-drop node creation
-- **Executable Workflows**: Not just diagrams — real, executable orchestration
-- **Native AT Integration**: SMS, USSD, Voice/IVR, Payments
+- **Visual Workflow Builder**: Drag-and-drop interface using React Flow
+- **Executable Workflows**: Real orchestration, not just diagrams
+- **Native AT Integration**: SMS, USSD, Voice/IVR, and Payments
 - **Session Management**: Stateful workflows for USSD and Voice sessions
-- **Full Observability**: Per-workflow and per-node execution logs
-- **Validation & Compilation**: Strong type checking and graph validation
-- **Retry & Error Handling**: Configurable retries with exponential backoff
-- **Execution Replay**: Visual playback of workflow executions
+- **Full Observability**: Complete execution logging and replay
 
-### Node Types
-
-**Triggers:**
-- SMS_RECEIVED
-- USSD_SESSION_START
-- INCOMING_CALL
-- PAYMENT_CALLBACK
-- SCHEDULED (cron)
-- HTTP_WEBHOOK
-
-**Actions:**
-- SEND_SMS
-- SEND_USSD_RESPONSE
-- INITIATE_CALL
-- PLAY_IVR
-- COLLECT_DTMF
-- REQUEST_PAYMENT
-- REFUND_PAYMENT
-- HTTP_REQUEST
-
-**Logic:**
-- CONDITION
-- SWITCH
-- DELAY
-- RETRY
-- RATE_LIMIT
-- MERGE
-
-**State:**
-- SESSION_READ
-- SESSION_WRITE
-- SESSION_END
-
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
 - TypeScript 5+
-- Redis (for session management)
+- Redis (for session management - planned)
 
 ### Installation
 
@@ -84,41 +27,39 @@ The platform is built with clean architecture principles and strict separation o
 npm install
 
 # Install frontend dependencies
-cd frontend/workflow-builder
-npm install
+cd frontend/workflow-builder && npm install && cd ../..
+
+# Install landing page dependencies
+cd landing && npm install && cd ..
 ```
 
 ### Development
 
-**Option 1: Run all services together (recommended)**
+**Start all services:**
 ```bash
-# Install concurrently if not already installed
-npm install
-
-# Start backend, frontend, and landing page together
 npm run dev:all
 ```
 
-**Option 2: Run services separately**
+This starts:
+- **Backend API**: http://localhost:3001
+- **Workflow Builder**: http://localhost:5173
+- **Landing Page**: http://localhost:3000
+
+**Or run services separately:**
 ```bash
-# Terminal 1: Start backend API server
+# Terminal 1: Backend
 npm run dev
 
-# Terminal 2: Start workflow builder frontend
+# Terminal 2: Frontend
 npm run dev:frontend
 
-# Terminal 3: Start landing page
+# Terminal 3: Landing
 npm run dev:landing
 ```
 
-**Access the applications:**
-- **Landing Page**: http://localhost:3000 (Next.js)
-- **Workflow Builder**: http://localhost:5173 (Vite/React)
-- **Backend API**: http://localhost:3001 (Express)
-
 ### Configuration
 
-Create a `.env` file for Africa's Talking credentials:
+Create a `.env` file in the root:
 
 ```env
 AT_USERNAME=your_username
@@ -126,77 +67,62 @@ AT_API_KEY=your_api_key
 AT_ENVIRONMENT=sandbox
 ```
 
-## Usage
+## Architecture Snapshot
 
-### Creating a Workflow
-
-1. Open the workflow builder UI
-2. Drag nodes from the sidebar onto the canvas
-3. Connect nodes by dragging from output handles to input handles
-4. Configure each node by clicking on it
-5. Save the workflow
-
-### Workflow Specification
-
-Workflows are defined as JSON following the canonical `WorkflowSpec` format:
-
-```typescript
-{
-  metadata: {
-    workflowId: "uuid",
-    version: 1,
-    name: "My Workflow",
-    createdBy: "user",
-    createdAt: "2024-01-01T00:00:00Z"
-  },
-  trigger: {
-    id: "trigger-1",
-    type: "SMS_RECEIVED",
-    label: "SMS Received",
-    config: { ... }
-  },
-  nodes: [ ... ],
-  edges: [ ... ]
-}
+```
+Frontend (React Flow) → Backend API → Execution Engine
+                                    ↓
+                          Compiler | Session Manager | AT Adapter
 ```
 
-### API Endpoints
+The platform uses clean architecture with strict separation:
+- **Frontend**: Visual workflow builder UI
+- **Backend**: REST API, compiler, execution engine
+- **Shared**: Type definitions and node definitions
 
-- `POST /api/workflows/validate` - Validate a workflow spec
-- `POST /api/workflows/compile` - Compile a workflow spec
-- `POST /api/workflows/execute` - Execute a workflow
-- `GET /api/workflows/executions/:id` - Get execution log
-- `GET /api/workflows/executions` - Query execution logs
+## Key Features
 
-## Architecture Decisions
+- **Visual Builder**: Drag-and-drop workflow creation
+- **Node Types**: Triggers, Actions, Logic, State operations
+- **Session Support**: USSD and Voice session state management
+- **Error Handling**: Configurable retries with exponential backoff
+- **Observability**: Per-node execution logs and replay
+- **Type Safety**: Full TypeScript with Zod validation
 
-### Why This Architecture?
+## Documentation
 
-1. **Clean Separation**: Frontend, backend, and shared code are strictly separated
-2. **Type Safety**: Full TypeScript with Zod validation
-3. **Scalability**: Stateless execution engine can scale horizontally
-4. **Observability**: Every step is logged and traceable
-5. **Resumability**: Execution can be paused and resumed
-6. **AI-Ready**: Machine-interpretable workflow spec for future AI features
+**📚 [Complete Documentation →](docs/README.md)**
 
-### Tradeoffs
+The documentation is organized into:
 
-- **In-Memory State**: Current session manager uses in-memory Map (replace with Redis in production)
-- **Simple Expression Parser**: Basic expression evaluation (use expr-eval library for production)
-- **No Database**: Workflows are stored in-memory (add PostgreSQL/MongoDB for persistence)
+- **[Overview](docs/overview/)** - Product vision, problem statement, target users
+- **[Architecture](docs/architecture/)** - System design, data flow, execution engine
+- **[Backend](docs/backend/)** - Services, API design, database
+- **[Frontend](docs/frontend/)** - UI architecture, state management
+- **[Integrations](docs/integrations/)** - Africa's Talking, third-party APIs, webhooks
+- **[Security](docs/security/)** - Authentication, secrets management, best practices
+- **[Deployment](docs/deployment/)** - Environments, CI/CD, production checklist
+- **[Testing](docs/testing/)** - Testing strategy and coverage
+- **[Contributing](docs/contributing/)** - Contribution guide and code style
+- **[Reference](docs/reference/)** - Glossary and FAQ
 
-## Production Considerations
+## Deployment
 
-Before deploying to production:
+For production deployment, see the [Production Checklist](docs/deployment/production-checklist.md).
 
-1. **Replace in-memory storage** with Redis/PostgreSQL
-2. **Add authentication** and authorization
-3. **Implement rate limiting** at API level
-4. **Add distributed tracing** (OpenTelemetry)
-5. **Implement workflow versioning** and migration
-6. **Add webhook signature verification** for AT callbacks
-7. **Set up monitoring** and alerting
-8. **Add database migrations** for workflow storage
+**Before deploying:**
+- Replace in-memory storage with Redis/PostgreSQL
+- Add authentication and authorization
+- Implement rate limiting
+- Set up monitoring and alerting
+- Configure webhook signature verification
+
+## Security
+
+Security is a priority. See [Security Best Practices](docs/security/best-practices.md) for guidelines.
+
+**Current state**: Development mode (no authentication)
+**Planned**: JWT authentication, RBAC, secrets management
 
 ## License
 
@@ -204,8 +130,8 @@ MIT
 
 ## Contributing
 
-This is a production-grade foundation. Contributions should maintain the same quality bar:
-- Strong typing
-- Clean architecture
-- Comprehensive error handling
-- Full observability
+Contributions are welcome! See the [Contribution Guide](docs/contributing/contribution-guide.md) for details.
+
+---
+
+**Need help?** Check the [FAQ](docs/reference/faq.md) or [documentation index](docs/README.md).
