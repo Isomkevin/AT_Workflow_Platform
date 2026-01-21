@@ -4,7 +4,7 @@
  * Main React Flow-based workflow builder
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -35,27 +35,151 @@ const nodeTypes: NodeTypes = {
 
 interface WorkflowBuilderProps {}
 
+const STORAGE_KEY = 'at-workflow-builder-state';
+
+interface SavedWorkflowState {
+  workflowName: string;
+  nodes: Array<{
+    id: string;
+    type: string;
+    position: { x: number; y: number };
+    data: {
+      label: string;
+      nodeType: string;
+      config: Record<string, unknown>;
+    };
+  }>;
+  edges: Array<{
+    id: string;
+    source: string;
+    target: string;
+    sourceHandle?: string;
+    targetHandle?: string;
+    markerEnd?: { type: string };
+  }>;
+}
+
 const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [workflowName, setWorkflowName] = useState('New Workflow');
+  const [isInitialized, setIsInitialized] = useState(false);
+  const isLoadingRef = useRef(false);
 
-  // Initialize with trigger node
+  // Load workflow state from localStorage
+  const loadWorkflowState = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const state: SavedWorkflowState = JSON.parse(saved);
+        
+        // Restore workflow name
+        setWorkflowName(state.workflowName || 'New Workflow');
+
+        // Restore nodes with definitions re-attached
+        const restoredNodes: Node[] = state.nodes.map((nodeData) => {
+          const definition = nodeRegistry.get(nodeData.data.nodeType);
+          return {
+            id: nodeData.id,
+            type: nodeData.type,
+            position: nodeData.position,
+            data: {
+              label: nodeData.data.label,
+              nodeType: nodeData.data.nodeType,
+              definition: definition,
+              config: nodeData.data.config || {},
+            },
+          };
+        });
+
+        // Restore edges
+        const restoredEdges: Edge[] = state.edges.map((edgeData) => ({
+          id: edgeData.id,
+          source: edgeData.source,
+          target: edgeData.target,
+          sourceHandle: edgeData.sourceHandle,
+          targetHandle: edgeData.targetHandle,
+          markerEnd: edgeData.markerEnd || { type: MarkerType.ArrowClosed },
+        }));
+
+        if (restoredNodes.length > 0) {
+          setNodes(restoredNodes);
+          setEdges(restoredEdges);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load workflow state from localStorage:', error);
+    }
+    return false;
+  }, [setNodes, setEdges]);
+
+  // Save workflow state to localStorage
+  const saveWorkflowState = useCallback(() => {
+    try {
+      const state: SavedWorkflowState = {
+        workflowName,
+        nodes: nodes.map((node) => ({
+          id: node.id,
+          type: node.type,
+          position: node.position,
+          data: {
+            label: node.data.label || '',
+            nodeType: node.data.nodeType || '',
+            config: node.data.config || {},
+          },
+        })),
+        edges: edges.map((edge) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+          markerEnd: edge.markerEnd,
+        })),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save workflow state to localStorage:', error);
+    }
+  }, [nodes, edges, workflowName]);
+
+  // Initialize: Load from localStorage or create default trigger node
   React.useEffect(() => {
-    const triggerNode: Node = {
-      id: 'trigger-1',
-      type: 'custom',
-      position: { x: 250, y: 100 },
-      data: {
-        label: 'SMS Received',
-        nodeType: 'SMS_RECEIVED',
-        definition: nodeRegistry.get('SMS_RECEIVED'),
-        config: {},
-      },
-    };
-    setNodes([triggerNode]);
-  }, []);
+    if (isInitialized) return;
+
+    isLoadingRef.current = true;
+    const loaded = loadWorkflowState();
+    if (!loaded) {
+      // No saved state, create default trigger node
+      const triggerNode: Node = {
+        id: 'trigger-1',
+        type: 'custom',
+        position: { x: 250, y: 100 },
+        data: {
+          label: 'SMS Received',
+          nodeType: 'SMS_RECEIVED',
+          definition: nodeRegistry.get('SMS_RECEIVED'),
+          config: {},
+        },
+      };
+      setNodes([triggerNode]);
+      setEdges([]);
+    }
+    setIsInitialized(true);
+    // Allow saving after a brief delay to ensure state is settled
+    setTimeout(() => {
+      isLoadingRef.current = false;
+    }, 100);
+  }, [isInitialized, loadWorkflowState, setNodes, setEdges]);
+
+  // Auto-save whenever nodes, edges, or workflowName changes (but not during initial load)
+  React.useEffect(() => {
+    if (isInitialized && !isLoadingRef.current) {
+      saveWorkflowState();
+    }
+  }, [nodes, edges, workflowName, isInitialized, saveWorkflowState]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -208,15 +332,19 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
 
       const result = await response.json();
       if (result.valid) {
-        alert('Workflow saved successfully!');
+        // Also save to localStorage
+        saveWorkflowState();
+        alert('Workflow saved successfully! (Also saved to browser storage)');
       } else {
         alert(`Validation errors: ${result.errors.map((e: any) => e.message).join(', ')}`);
       }
     } catch (error) {
       console.error('Failed to save workflow:', error);
-      alert('Failed to save workflow');
+      // Still save to localStorage even if API call fails
+      saveWorkflowState();
+      alert('Failed to save workflow to server, but saved to browser storage');
     }
-  }, [nodes, edges, workflowName]);
+  }, [nodes, edges, workflowName, saveWorkflowState]);
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
@@ -332,7 +460,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
           fontSize: '12px',
           color: '#666',
         }}>
-          💡 Tip: Select a node and press <strong>Delete</strong> to remove it. Click a node to customize its label and configuration.
+          💡 Tip: Select a node and press <strong>Delete</strong> to remove it. Click a node to customize its label and configuration. All changes are automatically saved to your browser.
         </div>
       </div>
 

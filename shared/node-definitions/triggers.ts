@@ -28,9 +28,12 @@ const smsReceivedTrigger: NodeDefinition = {
     },
   ],
   configSchema: z.object({
-    phoneNumber: z.string().optional().describe('Filter by sender phone number (optional)'),
+    phoneNumber: z.string().optional().describe('Filter by sender phone number (optional, supports wildcards)'),
     keyword: z.string().optional().describe('Filter by message keyword (optional)'),
     caseSensitive: z.boolean().default(false).describe('Case-sensitive keyword matching'),
+    regexPattern: z.string().optional().describe('Regex pattern for advanced message filtering'),
+    requireDeliveryReport: z.boolean().default(false).describe('Require delivery report callback'),
+    deliveryReportUrl: z.string().url().optional().describe('Custom delivery report webhook URL'),
   }),
   outputSchema: z.object({
     msisdn: z.string().describe('Sender phone number'),
@@ -64,6 +67,9 @@ const ussdSessionStartTrigger: NodeDefinition = {
   ],
   configSchema: z.object({
     serviceCode: z.string().optional().describe('Filter by USSD service code (optional)'),
+    networkCode: z.string().optional().describe('Filter by network operator code (optional)'),
+    sessionTimeout: z.number().int().min(10).max(300).default(60).describe('Session timeout in seconds'),
+    requireSessionId: z.boolean().default(true).describe('Require valid session ID'),
   }),
   outputSchema: z.object({
     sessionId: z.string().describe('USSD session ID'),
@@ -99,6 +105,9 @@ const incomingCallTrigger: NodeDefinition = {
   ],
   configSchema: z.object({
     phoneNumber: z.string().optional().describe('Filter by caller phone number (optional)'),
+    calledNumber: z.string().optional().describe('Filter by called number (optional)'),
+    requireCallerId: z.boolean().default(true).describe('Require caller ID'),
+    maxCallDuration: z.number().int().min(10).max(3600).optional().describe('Maximum call duration in seconds'),
   }),
   outputSchema: z.object({
     callSessionId: z.string().describe('Call session ID'),
@@ -134,6 +143,10 @@ const paymentCallbackTrigger: NodeDefinition = {
   configSchema: z.object({
     transactionType: z.enum(['checkout', 'b2c', 'b2b']).optional().describe('Filter by transaction type'),
     status: z.enum(['Success', 'Failed', 'Pending']).optional().describe('Filter by transaction status'),
+    currency: z.string().optional().describe('Filter by currency code (e.g., KES, UGX)'),
+    minAmount: z.number().optional().describe('Minimum transaction amount'),
+    maxAmount: z.number().optional().describe('Maximum transaction amount'),
+    validateSignature: z.boolean().default(true).describe('Validate payment callback signature'),
   }),
   outputSchema: z.object({
     transactionId: z.string().describe('Transaction ID'),
@@ -170,7 +183,11 @@ const scheduledTrigger: NodeDefinition = {
   ],
   configSchema: z.object({
     cronExpression: z.string().describe('Cron expression (e.g., "0 9 * * *" for daily at 9 AM)'),
-    timezone: z.string().default('UTC').describe('Timezone for schedule'),
+    timezone: z.string().default('UTC').describe('Timezone for schedule (IANA timezone)'),
+    startDate: z.string().datetime().optional().describe('Schedule start date (ISO 8601)'),
+    endDate: z.string().datetime().optional().describe('Schedule end date (ISO 8601)'),
+    maxExecutions: z.number().int().positive().optional().describe('Maximum number of executions'),
+    skipMissed: z.boolean().default(false).describe('Skip missed executions if system was down'),
   }),
   outputSchema: z.object({
     scheduledAt: z.string().describe('ISO timestamp of scheduled execution'),
@@ -218,10 +235,24 @@ const httpWebhookTrigger: NodeDefinition = {
     },
   ],
   configSchema: z.object({
-    method: z.enum(['GET', 'POST', 'PUT', 'PATCH']).default('POST').describe('HTTP method'),
+    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).default('POST').describe('HTTP method'),
     path: z.string().regex(/^\/[a-zA-Z0-9\/_-]*$/).describe('Webhook path (e.g., /webhook/sms)'),
-    requireAuth: z.boolean().default(false).describe('Require authentication'),
-    authToken: z.string().optional().describe('Auth token (if requireAuth is true)'),
+    auth: z.object({
+      type: z.enum(['none', 'basic', 'bearer', 'custom']).default('none').describe('Authentication type'),
+      token: z.string().optional().describe('Bearer token or custom header value'),
+      username: z.string().optional().describe('Basic auth username'),
+      password: z.string().optional().describe('Basic auth password'),
+      headerName: z.string().optional().describe('Custom header name (for custom auth)'),
+    }).default({ type: 'none' }).describe('Authentication configuration'),
+    headers: z.record(z.string()).optional().describe('Additional HTTP headers to require/validate'),
+    timeoutMs: z.number().int().min(100).max(30000).default(5000).describe('Request timeout in milliseconds'),
+    retry: z.object({
+      attempts: z.number().int().min(0).max(5).default(0).describe('Number of retry attempts'),
+      backoffMs: z.number().int().min(100).max(10000).default(1000).describe('Retry backoff in milliseconds'),
+    }).optional().describe('Retry configuration for webhook processing'),
+    validateSignature: z.boolean().default(false).describe('Validate webhook signature'),
+    signatureHeader: z.string().default('X-Signature').describe('Signature header name'),
+    signatureSecret: z.string().optional().describe('Secret for signature validation'),
   }),
   outputSchema: z.object({
     method: z.string().describe('HTTP method'),

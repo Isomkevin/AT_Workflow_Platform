@@ -36,6 +36,9 @@ const sessionReadNode: NodeDefinition = {
   ],
   configSchema: z.object({
     keys: z.array(z.string()).optional().describe('Specific keys to read (reads all if not specified)'),
+    defaultValue: z.record(z.unknown()).optional().describe('Default values if keys don\'t exist'),
+    mergeWithInput: z.boolean().default(true).describe('Merge session data with input data'),
+    outputKey: z.string().optional().describe('Output key name (defaults to "sessionData")'),
   }),
   inputSchema: z.object({}).passthrough(),
   outputSchema: z.object({
@@ -77,6 +80,10 @@ const sessionWriteNode: NodeDefinition = {
   configSchema: z.object({
     data: z.record(z.string()).describe('Key-value pairs to write (supports {{variable}} syntax)'),
     merge: z.boolean().default(true).describe('Whether to merge with existing data or replace'),
+    ttl: z.number().int().min(1).max(86400).optional().describe('Time-to-live in seconds'),
+    overwrite: z.boolean().default(true).describe('Overwrite existing keys'),
+    scope: z.enum(['session', 'workflow', 'global']).default('session').describe('Data scope'),
+    encrypt: z.boolean().default(false).describe('Encrypt sensitive data'),
   }),
   inputSchema: z.object({}).passthrough(),
   outputSchema: z.object({
@@ -110,6 +117,10 @@ const sessionEndNode: NodeDefinition = {
   outputHandles: [],
   configSchema: z.object({
     message: z.string().optional().describe('Final message to send (supports {{variable}} syntax)'),
+    clearData: z.boolean().default(false).describe('Clear session data on end'),
+    saveData: z.boolean().default(false).describe('Save session data before ending'),
+    redirectUrl: z.string().url().optional().describe('Redirect URL (for web-based sessions)'),
+    reason: z.string().optional().describe('Session end reason (supports {{variable}} syntax)'),
   }),
   inputSchema: z.object({}).passthrough(),
   outputSchema: z.object({
