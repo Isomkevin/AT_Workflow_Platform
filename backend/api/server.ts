@@ -5,6 +5,7 @@
  */
 
 import express from 'express';
+import * as net from 'net';
 import { createWorkflowRoutes } from './routes/workflows';
 import { WorkflowExecutionEngine } from '../execution-engine/executor';
 import { RedisSessionManager } from '../state/session-manager';
@@ -90,16 +91,89 @@ export function createApp(atConfig?: {
 }
 
 /**
+ * Check if a port is available
+ */
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(port, () => {
+      server.once('close', () => resolve(true));
+      server.close();
+    });
+    server.on('error', () => resolve(false));
+  });
+}
+
+/**
+ * Find an available port starting from the given port
+ */
+async function findAvailablePort(startPort: number, maxAttempts: number = 10): Promise<number> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const port = startPort + i;
+    const available = await isPortAvailable(port);
+    if (available) {
+      return port;
+    }
+  }
+  throw new Error(`Could not find an available port after ${maxAttempts} attempts starting from ${startPort}`);
+}
+
+/**
  * Start server
  */
-export function startServer(port: number = 3000, atConfig?: {
+export async function startServer(port: number = 3001, atConfig?: {
   username: string;
   apiKey: string;
   environment: 'sandbox' | 'production';
-}): void {
+}): Promise<void> {
   const app = createApp(atConfig);
   
-  app.listen(port, () => {
-    console.log(`Workflow API server running on port ${port}`);
+  // Check if the requested port is available, if not try to find an alternative
+  const requestedPort = port;
+  const availablePort = await isPortAvailable(port);
+  
+  if (!availablePort) {
+    console.warn(`⚠️  Port ${port} is already in use. Searching for an available port...`);
+    try {
+      const alternativePort = await findAvailablePort(port);
+      port = alternativePort;
+      console.log(`✅ Using alternative port: ${port}`);
+    } catch (error) {
+      console.error(`\n❌ Error: Could not find an available port.`);
+      console.error(`\nPort ${requestedPort} is in use. To fix this:`);
+      console.error(`  1. Stop the process using port ${requestedPort}`);
+      console.error(`  2. Use a different port by setting PORT environment variable (e.g., PORT=3002)`);
+      console.error(`\nTo find and kill the process on Windows:`);
+      console.error(`  netstat -ano | findstr :${requestedPort}`);
+      console.error(`  taskkill /PID <PID> /F`);
+      console.error(`\nTo find and kill the process on Linux/Mac:`);
+      console.error(`  lsof -ti:${requestedPort} | xargs kill -9`);
+      process.exit(1);
+    }
+  }
+  
+  const server = app.listen(port, () => {
+    console.log(`✅ Workflow API server running on port ${port}`);
+    if (port !== requestedPort) {
+      console.log(`   (Requested port ${requestedPort} was in use)`);
+    }
+  });
+
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`\n❌ Error: Port ${port} became unavailable during startup.`);
+      console.error(`\nTo fix this, you can:`);
+      console.error(`  1. Stop the process using port ${port}`);
+      console.error(`  2. Use a different port by setting PORT environment variable`);
+      console.error(`\nTo find and kill the process on Windows:`);
+      console.error(`  netstat -ano | findstr :${port}`);
+      console.error(`  taskkill /PID <PID> /F`);
+      console.error(`\nTo find and kill the process on Linux/Mac:`);
+      console.error(`  lsof -ti:${port} | xargs kill -9`);
+      process.exit(1);
+    } else {
+      console.error('Server error:', error);
+      process.exit(1);
+    }
   });
 }

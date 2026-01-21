@@ -11,22 +11,39 @@ import { NodeDefinition } from '@shared/node-definitions/types';
 interface NodeConfigPanelProps {
   node: Node;
   onUpdateConfig: (nodeId: string, config: Record<string, unknown>) => void;
+  onUpdateLabel?: (nodeId: string, label: string) => void;
   onClose: () => void;
 }
 
-const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({ node, onUpdateConfig, onClose }) => {
+const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({ node, onUpdateConfig, onUpdateLabel, onClose }) => {
   const definition = node.data.definition as NodeDefinition;
   const [config, setConfig] = useState<Record<string, unknown>>(node.data.config || {});
+  const [label, setLabel] = useState<string>(node.data.label || definition.name);
 
   useEffect(() => {
     setConfig(node.data.config || {});
-  }, [node]);
+    setLabel(node.data.label || definition.name);
+  }, [node, definition.name]);
 
   const handleConfigChange = (key: string, value: unknown) => {
     const newConfig = { ...config, [key]: value };
     setConfig(newConfig);
     onUpdateConfig(node.id, newConfig);
   };
+
+  const handleLabelChange = (newLabel: string) => {
+    setLabel(newLabel);
+    if (onUpdateLabel) {
+      onUpdateLabel(node.id, newLabel);
+    }
+  };
+
+  const isTrigger = node.data.nodeType?.toString().startsWith('SMS_RECEIVED') || 
+                    node.data.nodeType?.toString().startsWith('USSD_SESSION_START') ||
+                    node.data.nodeType?.toString().startsWith('INCOMING_CALL') ||
+                    node.data.nodeType?.toString().startsWith('PAYMENT_CALLBACK') ||
+                    node.data.nodeType?.toString().startsWith('SCHEDULED') ||
+                    node.data.nodeType?.toString().startsWith('HTTP_WEBHOOK');
 
   const renderConfigField = (key: string, schema: any) => {
     if (!schema || typeof schema !== 'object') return null;
@@ -210,6 +227,36 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({ node, onUpdateConfig,
 
       <div style={{ marginBottom: '16px', fontSize: '12px', color: '#666', lineHeight: '1.5', padding: '8px', background: '#f9fafb', borderRadius: '4px' }}>
         {definition.description}
+      </div>
+
+      <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#0B3B6A' }}>Node Label</h3>
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => handleLabelChange(e.target.value)}
+          placeholder="Node label"
+          style={{
+            width: '100%',
+            padding: '8px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '4px',
+            fontSize: '12px',
+            transition: 'border-color 0.2s ease',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#126DBF';
+            e.currentTarget.style.outline = 'none';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#e5e7eb';
+          }}
+        />
+        {isTrigger && (
+          <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px', fontStyle: 'italic' }}>
+            ⚠️ Trigger nodes cannot be deleted
+          </div>
+        )}
       </div>
 
       <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>

@@ -154,9 +154,16 @@ export interface RefundPaymentResponse {
 /**
  * AT API Error
  */
-export interface ATError {
+export class ATError extends Error {
   code: string;
-  message: string;
   statusCode?: number;
   retryable: boolean;
+
+  constructor(code: string, message: string, retryable: boolean, statusCode?: number) {
+    super(message);
+    this.name = 'ATError';
+    this.code = code;
+    this.statusCode = statusCode;
+    this.retryable = retryable;
+  }
 }

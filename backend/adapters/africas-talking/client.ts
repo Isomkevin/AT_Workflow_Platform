@@ -118,12 +118,7 @@ export class ATClient {
     retryable: boolean,
     statusCode?: number
   ): ATError {
-    return {
-      code,
-      message,
-      statusCode,
-      retryable,
-    };
+    return new ATError(code, message, retryable, statusCode);
   }
 
   /**

@@ -6,20 +6,24 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch backend/server.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:frontend\" \"npm run dev:landing\"",
+    "dev:frontend": "cd frontend/workflow-builder && npm run dev",
+    "dev:landing": "cd landing && npm run dev",
     "test": "vitest",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "zod": "^3.22.4",
+    "express": "^4.18.2",
     "uuid": "^9.0.1",
-    "express": "^4.18.2"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^20.10.0",
     "@types/uuid": "^9.0.7",
-    "@types/express": "^4.17.21",
-    "typescript": "^5.3.3",
+    "concurrently": "^8.2.2",
     "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
     "vitest": "^1.1.0"
   }
 }

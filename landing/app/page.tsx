@@ -30,10 +30,10 @@ function Header() {
             </div>
           </div>
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <a href="#demo" className="text-gray-700 px-4 py-2 text-sm font-medium transition-colors hover:text-[#126DBF]">
+            <a href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'} target="_blank" rel="noopener noreferrer" className="text-gray-700 px-4 py-2 text-sm font-medium transition-colors hover:text-[#126DBF]">
               See Demo
             </a>
-            <a href="#get-started" className="text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#0B3B6A]" style={{ backgroundColor: '#126DBF' }}>
+            <a href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'} target="_blank" rel="noopener noreferrer" className="text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#0B3B6A]" style={{ backgroundColor: '#126DBF' }}>
               Get Started
             </a>
           </div>
@@ -60,8 +60,8 @@ function Header() {
             <a href="#pricing" className="block px-3 py-2 text-gray-700 hover:text-[#126DBF] transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
             <a href="#how-it-works" className="block px-3 py-2 text-gray-700 hover:text-[#126DBF] transition-colors" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <div className="mt-4 space-y-2">
-              <a href="#demo" className="block px-3 py-2 text-gray-700 hover:text-[#126DBF] transition-colors" onClick={() => setMobileMenuOpen(false)}>See Demo</a>
-              <a href="#get-started" className="block mx-3 text-white px-4 py-2 rounded-lg text-center font-medium transition-colors hover:bg-[#0B3B6A]" style={{ backgroundColor: '#126DBF' }} onClick={() => setMobileMenuOpen(false)}>Get Started</a>
+              <a href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'} target="_blank" rel="noopener noreferrer" className="block px-3 py-2 text-gray-700 hover:text-[#126DBF] transition-colors" onClick={() => setMobileMenuOpen(false)}>See Demo</a>
+              <a href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'} target="_blank" rel="noopener noreferrer" className="block mx-3 text-white px-4 py-2 rounded-lg text-center font-medium transition-colors hover:bg-[#0B3B6A]" style={{ backgroundColor: '#126DBF' }} onClick={() => setMobileMenuOpen(false)}>Get Started</a>
             </div>
           </div>
         )}
@@ -87,14 +87,18 @@ function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="#get-started"
+                href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors text-center shadow-lg hover:shadow-xl hover:bg-[#0B3B6A]"
                 style={{ backgroundColor: '#126DBF' }}
               >
                 Start Building Free
               </a>
               <a
-                href="#demo"
+                href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-white border-2 px-8 py-4 rounded-lg text-lg font-semibold transition-colors text-center hover:bg-blue-50"
                 style={{ color: '#126DBF', borderColor: '#126DBF' }}
               >
@@ -621,7 +625,9 @@ function Pricing() {
                 ))}
               </ul>
               <a
-                href="#get-started"
+                href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`block w-full text-center py-3 px-6 rounded-lg font-semibold transition-colors ${
                   plan.popular
                     ? 'text-white'
@@ -656,19 +662,23 @@ function FinalCTA() {
           Join businesses across Africa who are building better customer experiences with AT Workflow
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="#get-started"
-            className="bg-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
-            style={{ color: '#126DBF' }}
-          >
-            Start Building Free
-          </a>
-          <a
-            href="#demo"
-            className="bg-transparent text-white border-2 border-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/10 transition-colors"
-          >
-            Schedule a Demo
-          </a>
+              <a
+                href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
+                style={{ color: '#126DBF' }}
+              >
+                Start Building Free
+              </a>
+              <a
+                href={process.env.NEXT_PUBLIC_WORKFLOW_BUILDER_URL || 'http://localhost:5173'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-transparent text-white border-2 border-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/10 transition-colors"
+              >
+                See Demo
+              </a>
         </div>
         <p className="mt-8 text-white/80 text-sm">
           No credit card required • Setup in 5 minutes • Free tier includes 100 executions/month

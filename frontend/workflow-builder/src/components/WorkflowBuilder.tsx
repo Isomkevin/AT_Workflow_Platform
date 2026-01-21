@@ -73,8 +73,33 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
   }, []);
 
   const onNodesDelete = useCallback((deleted: Node[]) => {
-    setSelectedNode(null);
-  }, []);
+    // Check if any deleted node is a trigger node
+    const hasTrigger = deleted.some(node => {
+      const nodeType = node.data.nodeType as string;
+      return nodeType?.startsWith('SMS_RECEIVED') || 
+             nodeType?.startsWith('USSD_SESSION_START') ||
+             nodeType?.startsWith('INCOMING_CALL') ||
+             nodeType?.startsWith('PAYMENT_CALLBACK') ||
+             nodeType?.startsWith('SCHEDULED') ||
+             nodeType?.startsWith('HTTP_WEBHOOK');
+    });
+
+    if (hasTrigger) {
+      alert('Trigger nodes cannot be deleted');
+      return;
+    }
+
+    // Remove edges connected to deleted nodes
+    const deletedIds = new Set(deleted.map(n => n.id));
+    setEdges((eds) => eds.filter(
+      edge => !deletedIds.has(edge.source) && !deletedIds.has(edge.target)
+    ));
+
+    // Clear selection if deleted node was selected
+    if (selectedNode && deletedIds.has(selectedNode.id)) {
+      setSelectedNode(null);
+    }
+  }, [setEdges, selectedNode]);
 
   const handleAddNode = useCallback((nodeType: string) => {
     const definition = nodeRegistry.get(nodeType);
@@ -104,6 +129,22 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
               data: {
                 ...node.data,
                 config,
+              },
+            }
+          : node
+      )
+    );
+  }, [setNodes]);
+
+  const handleUpdateNodeLabel = useCallback((nodeId: string, label: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                label,
               },
             }
           : node
@@ -194,6 +235,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
           onPaneClick={onPaneClick}
           onNodesDelete={onNodesDelete}
           nodeTypes={nodeTypes}
+          nodesDeletable={true}
+          nodesDraggable={true}
+          nodesConnectable={true}
+          elementsSelectable={true}
+          deleteKeyCode="Delete"
           fitView
           snapToGrid
           snapGrid={[20, 20]}
@@ -270,6 +316,24 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
             Save Workflow
           </button>
         </div>
+
+        {/* Tip Message */}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: 16, 
+          left: 16, 
+          zIndex: 10,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: '1px solid #e6f2fb',
+          fontSize: '12px',
+          color: '#666',
+        }}>
+          💡 Tip: Select a node and press <strong>Delete</strong> to remove it. Click a node to customize its label and configuration.
+        </div>
       </div>
 
       {/* Config Panel */}
@@ -277,6 +341,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = () => {
         <NodeConfigPanel
           node={selectedNode}
           onUpdateConfig={handleUpdateNodeConfig}
+          onUpdateLabel={handleUpdateNodeLabel}
           onClose={() => setSelectedNode(null)}
         />
       )}

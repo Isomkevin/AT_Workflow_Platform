@@ -6,10 +6,10 @@
 
 import { Router } from 'express';
 import { WorkflowSpec } from '../../shared/workflow-spec/types';
-import { compileWorkflow } from '../compiler';
-import { WorkflowExecutionEngine } from '../execution-engine/executor';
-import { logger } from '../logging/logger';
-import { ISessionManager } from '../state/session-manager';
+import { compileWorkflow } from '../../compiler';
+import { WorkflowExecutionEngine } from '../../execution-engine/executor';
+import { logger } from '../../logging/logger';
+import { ISessionManager } from '../../state/session-manager';
 
 /**
  * Create workflow routes

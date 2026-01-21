@@ -90,14 +90,31 @@ npm install
 
 ### Development
 
+**Option 1: Run all services together (recommended)**
 ```bash
-# Start backend API server
+# Install concurrently if not already installed
+npm install
+
+# Start backend, frontend, and landing page together
+npm run dev:all
+```
+
+**Option 2: Run services separately**
+```bash
+# Terminal 1: Start backend API server
 npm run dev
 
-# Start frontend (in another terminal)
-cd frontend/workflow-builder
-npm run dev
+# Terminal 2: Start workflow builder frontend
+npm run dev:frontend
+
+# Terminal 3: Start landing page
+npm run dev:landing
 ```
+
+**Access the applications:**
+- **Landing Page**: http://localhost:3000 (Next.js)
+- **Workflow Builder**: http://localhost:5173 (Vite/React)
+- **Backend API**: http://localhost:3001 (Express)
 
 ### Configuration
 

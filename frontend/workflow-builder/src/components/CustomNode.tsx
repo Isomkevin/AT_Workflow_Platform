@@ -15,12 +15,20 @@ interface CustomNodeData {
   config?: Record<string, unknown>;
 }
 
-const CustomNode: React.FC<NodeProps<CustomNodeData>> = ({ data, selected }) => {
+const CustomNode: React.FC<NodeProps<CustomNodeData>> = ({ data, selected, id }) => {
   const definition = data.definition;
   // Use Africa's Talking brand colors, fallback to node's color if defined
   const nodeColor = definition?.color || '#126DBF';
   const color = selected ? '#126DBF' : (nodeColor === '#6366f1' ? '#126DBF' : nodeColor);
   const category = definition?.category || 'action';
+  
+  // Check if this is a trigger node
+  const isTrigger = data.nodeType?.toString().startsWith('SMS_RECEIVED') || 
+                    data.nodeType?.toString().startsWith('USSD_SESSION_START') ||
+                    data.nodeType?.toString().startsWith('INCOMING_CALL') ||
+                    data.nodeType?.toString().startsWith('PAYMENT_CALLBACK') ||
+                    data.nodeType?.toString().startsWith('SCHEDULED') ||
+                    data.nodeType?.toString().startsWith('HTTP_WEBHOOK');
 
   // Determine node style based on category
   const getNodeStyle = () => {
@@ -41,7 +49,7 @@ const CustomNode: React.FC<NodeProps<CustomNodeData>> = ({ data, selected }) => 
   };
 
   return (
-    <div style={getNodeStyle()}>
+    <div style={getNodeStyle()} title={isTrigger ? 'Trigger nodes cannot be deleted' : undefined}>
       {/* Input Handles */}
       {definition?.inputHandles && definition.inputHandles.length > 0 && (
         <>
